@@ -1,0 +1,68 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    container_name: web
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+      - kafka
+      - zookeeper
+    env_file:
+      - ./.env
+    command: >
+      sh -c "python manage.py makemigrations && python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
+    restart: on-failure
+    volumes:
+      - .:/app
+    
+
+  kafka:
+    image: wurstmeister/kafka
+    container_name: kafka
+    ports:
+      - "9092:9092"
+    env_file:
+      - ./.env
+    volumes:
+      - kafka_data:/var/lib/kafka/data
+
+  zookeeper:
+    container_name: zookeeper
+    image: wurstmeister/zookeeper:latest
+    ports:
+      - "2181:2181"
+    restart: on-failure
+    volumes:
+      - zookeeper_data:/var/lib/zookeeper/data
+    
+
+  db:
+    image: postgres:13-alpine
+    container_name: db
+    ports:
+      - 5432:5432
+    env_file:
+      - ./.env
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: on-failure
+
+
+  kafdrop:
+    image: obsidiandynamics/kafdrop
+    container_name: kafdrop
+    ports:
+      - "9000:9000"
+    environment:
+      KAFKA_BROKER_CONNECT: kafka:9092
+    depends_on:
+      - kafka
+      - zookeeper
+
+volumes:
+  kafka_data:
+  zookeeper_data:
+  postgres_data:
