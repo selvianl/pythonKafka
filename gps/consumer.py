@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 import sys
 
@@ -17,17 +18,22 @@ from api.models import Device, LocationData
 from core.config import KAFKA_BROKER, KAFKA_TOPIC
 
 
-# Function to insert GPS location into PostgreSQL
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
+logger = logging.getLogger(__name__)
+
+
 def insert_gps_location(latitude, longitude):
     """Insert the GPS location into PostgreSQL."""
     try:
-        device, _ = Device.objects.get_or_create(device_id="1", name="dev")
-        log = LocationData.objects.create(
+        device, _ = Device.objects.get_or_create(device_id="5", name="dev5")
+        LocationData.objects.create(
             device=device, latitude=latitude, longitude=longitude
         )
 
     except Exception as e:
-        print(f"Error inserting to PostgreSQL: {e}")
+        logger.info(f"Error inserting to PostgreSQL: {e}")
 
 
 def main():
@@ -42,15 +48,10 @@ def main():
         ),  # Deserialize JSON messages
     )
 
-    # Poll for messages
     for message in consumer:
-        # Fetch the GPS data
         gps_data = message.value
-        print(gps_data)
         latitude = gps_data["latitude"]
         longitude = gps_data["longitude"]
-
-        # Insert GPS data into PostgreSQL
         insert_gps_location(latitude, longitude)
 
 
