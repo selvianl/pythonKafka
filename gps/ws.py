@@ -29,7 +29,7 @@ def handle_client(client_socket):
             # Wait for 3 seconds before sending the next data
             time.sleep(3)
     except Exception as e:
-        print(f"Error with client: {e}")
+        logger.info(f"Error with client: {e}")
     finally:
         client_socket.close()
 
